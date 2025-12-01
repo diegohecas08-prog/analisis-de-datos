@@ -32,8 +32,8 @@ if page == "Dashboard":
     t1, t2 = st.tabs(["General", "Detalle"])
     with t1:
         ca, cb = st.columns(2)
-        ca.plotly_chart(px.pie(data, names='type', title="tv show vs movies", color_discrete_sequence=px.colors.sequential.Reds_r), use_container_width=True)
-        cb.plotly_chart(px.area(data.groupby(data['year'].dt.year)['show_id'].count().reset_index(), x='año', y='evolucion por año', title="Evolución", color_discrete_sequence=['#221f1f']), use_container_width=True)
+        ca.plotly_chart(px.pie(data, names='type', title="peliculas y series", color_discrete_sequence=px.colors.sequential.Reds_r), use_container_width=True)
+        cb.plotly_chart(px.area(data.groupby(data['date_added'].dt.year)['show_id'].count().reset_index(), x='año', y='evolucion', title="Evolución por año ", color_discrete_sequence=['#E50914']), use_container_width=True)
         st.info("Predominan películas y crecimiento reciente.")
     with t2:
         cc, cd = st.columns(2)
