@@ -2,84 +2,52 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-st.set_page_config(page_title="Netflix App", layout="wide")
+st.set_page_config(page_title="Netflix", layout="wide", page_icon="🎬")
 
-# 1. CONSUMO DE DATOS (Simulación API)
 @st.cache_data
-def load_data():
+def load():
     url = "https://raw.githubusercontent.com/SahilChachra/Netflix-Data-Visualization/master/netflix_titles.csv"
     df = pd.read_csv(url)
     df['date_added'] = pd.to_datetime(df['date_added'].str.strip(), errors='coerce')
     return df
 
-df = load_data()
+try:
+    df = load()
+except:
+    df = pd.DataFrame()
 
-# 2. SIDEBAR Y FILTROS
-st.sidebar.header("Filtros")
-page = st.sidebar.radio("Navegación", ["Dashboard", "Datos", "Feedback"]) # Comp 1
-pais = st.sidebar.multiselect("País", df['country'].value_counts().index[:10]) # Comp 2
-anio = st.sidebar.slider("Año", 2000, 2021, (2015, 2021)) # Comp 3
+st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg", width=120)
+page = st.sidebar.radio("Menú", ["Dashboard", "Datos", "Feedback"])
+pais = st.sidebar.multiselect("País", df['country'].value_counts().index[:10] if not df.empty else [])
+anio = st.sidebar.slider("Año", 2000, 2021, (2015, 2021))
 
-# Lógica de Filtrado
-data = df[(df['release_year'].between(anio[0], anio[1]))]
-if pais: data = data[data['country'].str.contains('|'.join(pais), na=False)]
+data = df[df['release_year'].between(anio[0], anio[1])] if not df.empty else df
+if pais and not data.empty: data = data[data['country'].str.contains('|'.join(pais), na=False)]
 
-# --- 3. ESTRUCTURA PRINCIPAL ---
 if page == "Dashboard":
-    st.title("Análisis de Contenido Netflix")
-    
-    # KPIs (Métricas clave)
+    st.title("Análisis Netflix")
     c1, c2, c3 = st.columns(3)
-    c1.metric("Total Títulos", len(data)) 
-    c2.metric("Películas", len(data[data['type']=='Movie'])) 
-    c3.metric("Series TV", len(data[data['type']=='TV Show'])) 
+    c1.metric("Total", len(data)); c2.metric("Películas", len(data[data['type']=='Movie'])); c3.metric("Series", len(data[data['type']=='TV Show']))
+    
+    t1, t2 = st.tabs(["General", "Detalle"])
+    with t1:
+        ca, cb = st.columns(2)
+        ca.plotly_chart(px.pie(data, names='type', title="Tipo", color_discrete_sequence=px.colors.sequential.Reds_r), use_container_width=True)
+        cb.plotly_chart(px.area(data.groupby(data['date_added'].dt.year)['show_id'].count().reset_index(), x='date_added', y='show_id', title="Evolución", color_discrete_sequence=['#E50914']), use_container_width=True)
+        st.info("Predominan películas y crecimiento reciente.")
+    with t2:
+        cc, cd = st.columns(2)
+        cc.plotly_chart(px.bar(data['rating'].value_counts().head(), title="Ratings", color_discrete_sequence=px.colors.sequential.Reds_r), use_container_width=True)
+        cd.plotly_chart(px.histogram(data[data['type']=='Movie'], x='duration', title="Duración", color_discrete_sequence=['#221f1f']), use_container_width=True)
+        st.success("Contenido adulto (TV-MA) es mayoría.")
 
-    # Organización por Pestañas
-    tab1, tab2 = st.tabs(["Distribución", "Detalles"]) 
+elif page == "Datos":
+    st.title("Datos")
+    st.dataframe(data if st.checkbox("Ver todo") else data.iloc[:, :5], use_container_width=True)
+    st.download_button("Bajar CSV", data.to_csv(index=False).encode('utf-8'), "netflix.csv")
 
-    with tab1:
-        col_a, col_b = st.columns(2)
-        with col_a:
-            # Gráfico 1: Torta 
-            st.plotly_chart(px.pie(
-                data, 
-                names='type', 
-                title="Proporción Películas vs Series",
-                color_discrete_sequence=px.colors.sequential.Reds_r
-            ), use_container_width=True)
-            st.info("La mayoría del catálogo corresponde a películas.") 
-            
-        with col_b:
-            # Gráfico 2: Área 
-            conteo = data.groupby(data['date_added'].dt.year)['show_id'].count().reset_index()
-            st.plotly_chart(px.area(
-                conteo, 
-                x='date_added', 
-                y='show_id', 
-                title="Títulos agregados por año",
-                color_discrete_sequence=['#E50914'] 
-            ), use_container_width=True)
-            st.info("Se observa un crecimiento exponencial desde 2016.") 
-
-    with tab2:
-        col_c, col_d = st.columns(2)
-        with col_c:
-            # Gráfico 3: Barras 
-            top_ratings = data['rating'].value_counts().head(5)
-            st.plotly_chart(px.bar(
-                top_ratings, 
-                title="Top 5 Clasificaciones",
-                color_discrete_sequence=px.colors.sequential.RdBu 
-            ), use_container_width=True)
-            
-        with col_d:
-            # Gráfico 4: Histograma 
-            movies = data[data['type']=='Movie']
-            st.plotly_chart(px.histogram(
-                movies, 
-                x='duration', 
-                title="Duración de Películas",
-                color_discrete_sequence=['#221f1f'] 
-            ), use_container_width=True)
-            
-        st.success("El contenido para adultos (TV-MA) domina la oferta actual.")
+elif page == "Feedback":
+    st.title("📝 Opinión")
+    with st.form("f"):
+        st.text_input("Nombre"); st.slider("Nota", 1, 7)
+        if st.form_submit_button("Enviar"): st.toast("¡Enviado!")
