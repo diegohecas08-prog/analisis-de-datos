@@ -32,13 +32,13 @@ if page == "Dashboard":
     t1, t2 = st.tabs(["General", "Detalle"])
     with t1:
         ca, cb = st.columns(2)
-        ca.plotly_chart(px.pie(data, names='type', title="peliculas y series", color_discrete_sequence=px.colors.sequential.Reds_r), use_container_width=True)
-        cb.plotly_chart(px.area(data.groupby(data['date_added'].dt.year)['show_id'].count().reset_index(), x='año', y='evolucion', title="Evolución por año ", color_discrete_sequence=['#E50914']), use_container_width=True)
+        ca.plotly_chart(px.pie(data, names='type', title="Tipo", color_discrete_sequence=px.colors.sequential.Reds_r), use_container_width=True)
+        cb.plotly_chart(px.area(data.groupby(data['date_added'].dt.year)['show_id'].count().reset_index(), x='date_added', y='show_id', title="Evolución", color_discrete_sequence=['#E50914']), use_container_width=True)
         st.info("Predominan películas y crecimiento reciente.")
     with t2:
         cc, cd = st.columns(2)
         cc.plotly_chart(px.bar(data['rating'].value_counts().head(), title="Ratings", color_discrete_sequence=px.colors.sequential.Reds_r), use_container_width=True)
-        cd.plotly_chart(px.histogram(data[data['type']=='Movie'], x='duracion', title="Duración", color_discrete_sequence=['#221f1f']), use_container_width=True)
+        cd.plotly_chart(px.histogram(data[data['type']=='Movie'], x='duration', title="Duración", color_discrete_sequence=['#221f1f']), use_container_width=True)
         st.success("Contenido adulto (TV-MA) es mayoría.")
 
 elif page == "Datos":
@@ -51,6 +51,7 @@ elif page == "Feedback":
     with st.form("f"):
         st.text_input("Nombre"); st.slider("Nota", 1, 7)
         if st.form_submit_button("Enviar"): st.toast("¡Enviado!")
+
 
 
 
