@@ -33,7 +33,7 @@ if page == "Dashboard":
     with t1:
         ca, cb = st.columns(2)
         ca.plotly_chart(px.pie(data, names='type', title="tv show vs movies", color_discrete_sequence=px.colors.sequential.Reds_r), use_container_width=True)
-        cb.plotly_chart(px.area(data.groupby(data['year'].dt.year)['show_id'].count().reset_index(), x='año', y='evolucion por año', title="Evolución", color_discrete_sequence=['darkblue']), use_container_width=True)
+        cb.plotly_chart(px.area(data.groupby(data['year'].dt.year)['show_id'].count().reset_index(), x='año', y='evolucion por año', title="Evolución", color_discrete_sequence=['#221f1f']), use_container_width=True)
         st.info("Predominan películas y crecimiento reciente.")
     with t2:
         cc, cd = st.columns(2)
@@ -51,5 +51,6 @@ elif page == "Feedback":
     with st.form("f"):
         st.text_input("Nombre"); st.slider("Nota", 1, 7)
         if st.form_submit_button("Enviar"): st.toast("¡Enviado!")
+
 
 
